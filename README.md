@@ -5,7 +5,7 @@ Un bot Discord sur l'univers de Pokémon en français
 
 ## Informations importantes
 
-> Merci de prendre connaissance de la [politique de confidentialité](https://github.com/clezred/pokebot/blob/master/privacy_policy.md) ainsi que des [conditions d'utilisation](https://github.com/clezred/pokebot/blob/master/terms_of_service.md) du PokéBot.
+> Merci de prendre connaissance de la [politique de confidentialité](https://github.com/clezred/pokebot/blob/main/privacy_policy.md) ainsi que des [conditions d'utilisation](https://github.com/clezred/pokebot/blob/main/terms_of_service.md) du PokéBot.
 
 > Pour nous contacter, merci de passer par le [serveur Discord de support](https://discord.gg/invite/7mk2gB9Q3T) du PokéBot.
 
@@ -21,7 +21,7 @@ Les mises à jour du bot sont très irrégulières. Ce projet étant un projet p
 
 ## Fonctionnalités
 
-> L'ensemble des fonctionnalités du PokéBot sont données dans le fichier [`features.md`](https://github.com/clezred/pokebot/blob/master/features.md)
+> L'ensemble des fonctionnalités du PokéBot sont données dans le fichier [`features.md`](https://github.com/clezred/pokebot/blob/main/features.md)
 
 ## Origine du projet
 
