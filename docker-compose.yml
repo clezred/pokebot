@@ -1,0 +1,35 @@
+services:
+  database:
+    image: postgres:18-trixie
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - ./data/postgres_root:/var/lib/postgresql/
+      - ./initdb:/docker-entrypoint-initdb.d
+    ports:
+      - "${DB_PORT}:5432"
+
+  pokebot:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - database
+
+  backup_scheduler:
+    image: postgres:18-trixie
+    command: ["/bin/bash", "-c", "chmod +x /usr/local/bin/backup.sh && while true; do /usr/local/bin/backup.sh; sleep 86400; done"]
+    restart: always
+    environment:
+      DB_USER: ${DB_USER}
+      DB_NAME: ${DB_NAME}
+      DB_PASSWORD: ${DB_PASS}
+    volumes:
+      - ./backup.sh:/usr/local/bin/backup.sh
+      - ./backups:/backups
+    depends_on:
+      - database

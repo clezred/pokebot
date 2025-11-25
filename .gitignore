@@ -1,3 +1,6 @@
+backups/
+initdb/
+data/
 config.json
 node_modules/
 configTest.json

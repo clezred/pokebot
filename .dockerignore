@@ -1,0 +1,15 @@
+backups
+backup.sh
+initdb
+node_modules
+.env
+Dockerfile
+docker-compose.yml
+docker-compose.yaml
+.git
+.gitignore
+*.log
+npm-debug.log
+.cache
+.vscode
+data
