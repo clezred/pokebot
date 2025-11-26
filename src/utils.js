@@ -1,4 +1,5 @@
-const ids = require('../config/ids.json');
+const config = require('./config.js');
+const ids = config.ids;
 
 /**
  * Get current time in HH:MM format

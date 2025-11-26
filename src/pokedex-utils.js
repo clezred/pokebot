@@ -1,7 +1,8 @@
-const typesJson = require('../config/types.json');
+const config = require('./config.js');
+const typesJson = config.types;
+const pkmNamesLocales = config.pkmNamesLocales;
 const { latinize } = require('./latinize');
 const { subRequest, getPokemonSpecies } = require('./pokeapi-utils');
-const pkmNamesLocales = require('../config/pkmnameslocales.json');
 const { random, upperFirst } = require('./utils');
 const { EmbedBuilder } = require('discord.js');
 

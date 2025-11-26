@@ -1,9 +1,9 @@
 const { Collection, User, ComponentType, ButtonBuilder, ActionRowBuilder, ButtonStyle, ChatInputCommandInteraction, ChannelType, EmbedBuilder, MessageCollector, TextChannel } = require("discord.js");
 const { random, logWarn } = require('./utils.js');
-const ids = require('../config/ids.json')
-const gen = require('../config/genpkid.json');
+const config = require('./config.js');
+const { ids, gen } = config;
+const difficulties = config.gameDifficulty;
 const { latinize } = require('./latinize');
-const difficulties = require('../config/gamedifficulty.json');
 const { pokedexEmbed } = require('./pokedex-utils.js');
 const { sendLogMessage } = require("./discord-utils.js");
 const { getPokemonSpecies, subRequest } = require("./pokeapi-utils.js");

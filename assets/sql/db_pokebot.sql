@@ -40,3 +40,17 @@ CREATE TABLE commands_status (
     reason TEXT,
     updated_at TIMESTAMP NOT NULL
 );
+
+-- Insertion des statuts de commandes par défaut (toutes activées)
+INSERT INTO commands_status (command_name, is_enabled, reason, updated_at) VALUES
+    ('pokequiz', TRUE, NULL, NOW()),
+    ('pokeparty', TRUE, NULL, NOW()),
+    ('pokeloto', TRUE, NULL, NOW()),
+    ('team', TRUE, NULL, NOW()),
+    ('pokedex', TRUE, NULL, NOW()),
+    ('support', TRUE, NULL, NOW()),
+    ('help', TRUE, NULL, NOW()),
+    ('rolereact', TRUE, NULL, NOW()),
+    ('me', TRUE, NULL, NOW()),
+    ('publish', TRUE, NULL, NOW()),
+    ('news-channel', TRUE, NULL, NOW());

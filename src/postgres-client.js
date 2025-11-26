@@ -1,12 +1,8 @@
-require('dotenv').config();
 const { Client: PostgresClient } = require('pg');
+const config = require('./config.js');
 const { logInfo, logWarn, logError } = require('./utils.js');
 
-const DB_HOST = process.env.DB_HOST;
-const DB_PORT = process.env.DB_PORT;
-const DB_NAME = process.env.DB_NAME;
-const DB_USER = process.env.DB_USER;
-const DB_PASS = process.env.DB_PASS;
+const { host: DB_HOST, port: DB_PORT, name: DB_NAME, user: DB_USER, pass: DB_PASS } = config.db;
 
 let postgresClientInstance;
 

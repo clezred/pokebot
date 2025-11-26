@@ -1,5 +1,6 @@
 const { getDiscordClient, getChannel } = require("./discord-client");
-const ids = require('../config/ids.json');
+const config = require('./config.js');
+const ids = config.ids;
 
 let guilds;
 

@@ -4,12 +4,10 @@ const path = require('node:path');
 const { Collection, Events, EmbedBuilder, ChannelType, PermissionsBitField } = require('discord.js');
 
 // NEW IMPORTS
-require('dotenv').config();
+const config = require('./config.js');
 const { getDiscordClient, getChannel, getRole, getMember } = require('./discord-client.js');
 const { getMembersPokemon, addMembersPokemon, addGivenRoleReactionRecord, deleteGivenRoleReactionRecord } = require('./postgres-utils.js');
-const ids = require('../config/ids.json');
-const gen = require('../config/genpkid.json');
-const types = require('../config/types.json');
+const { ids, gen, types } = config;
 const { logWarn, logInfo, random, logError } = require('./utils.js');
 const { sendMessage, sendLogMessage, addRole, removeRole } = require('./discord-utils.js');
 const { updateBotPresence } = require('./client-presence-utils.js');
@@ -46,7 +44,7 @@ for (const folder of commandFolders) {
 	}
 }
 
-discordClient.login(process.env.TOKEN);
+discordClient.login(config.token);
 
 discordClient.once(Events.ClientReady, async () => {
     const logsChannel = await getChannel(ids.logsChannelId);

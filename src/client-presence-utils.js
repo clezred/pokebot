@@ -1,7 +1,8 @@
 const { ActivityType } = require('discord.js');
 const { getDiscordClient } = require('./discord-client');
 const { random } = require('./utils');
-const pkmGames = require('../config/pkmgames.json');
+const config = require('./config.js');
+const pkmGames = config.pkmGames;
 
 const customPresence = {
     activityType: ActivityType.Playing,

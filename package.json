@@ -4,7 +4,13 @@
   "description": "Discord bot about Pokemon",
   "main": "src",
   "scripts": {
-    "start": "node .",
+    "start": "NODE_ENV=production node .",
+    "start:dev": "NODE_ENV=development node .",
+    "start:test": "NODE_ENV=test node .",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:test:up": "docker compose -f docker-compose.test.yml up -d",
+    "docker:test:down": "docker compose -f docker-compose.test.yml down",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

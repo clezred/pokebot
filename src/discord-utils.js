@@ -1,6 +1,7 @@
 const { getChannel, getGuild, getRole } = require("./discord-client");
 const { logWarn } = require("./utils");
-const ids = require('../config/ids.json');
+const config = require('./config.js');
+const ids = config.ids;
 
 async function sendMessage(channelId, message) {
     const channel = await getChannel(channelId);

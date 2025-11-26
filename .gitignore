@@ -7,4 +7,5 @@ configTest.json
 configBot.json
 .vscode/
 .env
+.env.test
 src/dbtransfer.js

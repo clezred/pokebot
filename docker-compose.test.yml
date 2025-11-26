@@ -1,0 +1,25 @@
+services:
+  database_test:
+    image: postgres:18-trixie
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - ./data/postgres_test:/var/lib/postgresql/
+      - ./assets/sql:/docker-entrypoint-initdb.d
+    ports:
+      - "${DB_PORT}:5432"
+
+  pokebot_test:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    restart: "no"
+    env_file:
+      - .env.test
+    environment:
+      NODE_ENV: test
+    depends_on:
+      - database_test

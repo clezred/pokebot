@@ -1,6 +1,7 @@
 const { Client: DiscordClient, GatewayIntentBits, Guild, Channel, Role, Partials, Message } = require('discord.js');
 const { logError } = require('./utils.js');
-const ids = require('../config/ids.json');
+const config = require('./config.js');
+const ids = config.ids;
 
 let discordClientInstance;
 
