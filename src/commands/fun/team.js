@@ -40,7 +40,7 @@ module.exports = {
             }
         }
 
-		const embed = await team(pkms);
+		const { embed, attachment } = await team(pkms);
 
 		if (!embed) {
 			await interaction.editReply({content: "Erreur lors de la récupération des données", ephemeral: true});
@@ -49,7 +49,7 @@ module.exports = {
 
 		embed.data.author.name += interaction.user.username;
 
-		await interaction.editReply({embeds: [embed]});
+		await interaction.editReply({embeds: [embed], files: [attachment]});
 
 		sendLogMessage("Command : `team` | User : `" + interaction.user.username + "` | ChannelType : `" + Object.keys(ChannelType).find(key => ChannelType[key] === interaction.channel.type) + "`");
 	}

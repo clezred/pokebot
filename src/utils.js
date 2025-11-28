@@ -1,5 +1,11 @@
-const config = require('./config.js');
-const ids = config.ids;
+/************************************************************************
+ * Utility functions
+ 
+ This module provides various utility functions for logging, time formatting,
+ duration formatting, number conversions, object manipulation, random number
+ generation, and string capitalization.
+ ************************************************************************/
+
 
 /**
  * Get current time in HH:MM format
@@ -20,7 +26,7 @@ function getCurrentTime() {
  * @param {String} txt 
  */
 function logInfo(txt) {
-    console.log(`[${getCurrentTime()}] info: ${txt}`);
+    console.log(`[${getCurrentTime()}] INFO: ${txt}`);
 }
 
 /**
@@ -28,7 +34,7 @@ function logInfo(txt) {
  * @param {String} txt 
  */
 function logWarn(txt) {
-    console.warn(`[${getCurrentTime()}] warn: ${txt}`);
+    console.warn(`[${getCurrentTime()}] WARN: ${txt}`);
 }
 
 /**
@@ -36,7 +42,7 @@ function logWarn(txt) {
  * @param {String} txt 
  */
 function logError(txt) {
-    console.error(`[${getCurrentTime()}] ERRO: ${txt}`)
+    console.error(`[${getCurrentTime()}] ERROR: ${txt}`)
 }
 
 /**
