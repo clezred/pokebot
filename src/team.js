@@ -55,12 +55,18 @@ async function generateTeamImage(pokemons, pkmNames, pkmTypes, username) {
     const shinyIconLine2 = 218;
     const shinyIconLine3 = 315;
     const cards = [
-        { spriteColumn: spriteColumn1, spriteLine: spriteLine1, infosColumn: infosColumn1, nameLine: nameLine1, typesLine: typesLine1, shinyColumn: shinyIconColumn1, shinyLine: shinyIconLine1 },
-        { spriteColumn: spriteColumn2, spriteLine: spriteLine1, infosColumn: infosColumn2, nameLine: nameLine1, typesLine: typesLine1, shinyColumn: shinyIconColumn2, shinyLine: shinyIconLine1 },
-        { spriteColumn: spriteColumn1, spriteLine: spriteLine2, infosColumn: infosColumn1, nameLine: nameLine2, typesLine: typesLine2, shinyColumn: shinyIconColumn1, shinyLine: shinyIconLine2 },
-        { spriteColumn: spriteColumn2, spriteLine: spriteLine2, infosColumn: infosColumn2, nameLine: nameLine2, typesLine: typesLine2, shinyColumn: shinyIconColumn2, shinyLine: shinyIconLine2 },
-        { spriteColumn: spriteColumn1, spriteLine: spriteLine3, infosColumn: infosColumn1, nameLine: nameLine3, typesLine: typesLine3, shinyColumn: shinyIconColumn1, shinyLine: shinyIconLine3 },
-        { spriteColumn: spriteColumn2, spriteLine: spriteLine3, infosColumn: infosColumn2, nameLine: nameLine3, typesLine: typesLine3, shinyColumn: shinyIconColumn2, shinyLine: shinyIconLine3 }
+        { spriteColumn: spriteColumn1, spriteLine: spriteLine1, infosColumn: infosColumn1, 
+            nameLine: nameLine1, typesLine: typesLine1, shinyColumn: shinyIconColumn1, shinyLine: shinyIconLine1 },
+        { spriteColumn: spriteColumn2, spriteLine: spriteLine1, infosColumn: infosColumn2, 
+            nameLine: nameLine1, typesLine: typesLine1, shinyColumn: shinyIconColumn2, shinyLine: shinyIconLine1 },
+        { spriteColumn: spriteColumn1, spriteLine: spriteLine2, infosColumn: infosColumn1, 
+            nameLine: nameLine2, typesLine: typesLine2, shinyColumn: shinyIconColumn1, shinyLine: shinyIconLine2 },
+        { spriteColumn: spriteColumn2, spriteLine: spriteLine2, infosColumn: infosColumn2, 
+            nameLine: nameLine2, typesLine: typesLine2, shinyColumn: shinyIconColumn2, shinyLine: shinyIconLine2 },
+        { spriteColumn: spriteColumn1, spriteLine: spriteLine3, infosColumn: infosColumn1, 
+            nameLine: nameLine3, typesLine: typesLine3, shinyColumn: shinyIconColumn1, shinyLine: shinyIconLine3 },
+        { spriteColumn: spriteColumn2, spriteLine: spriteLine3, infosColumn: infosColumn2, 
+            nameLine: nameLine3, typesLine: typesLine3, shinyColumn: shinyIconColumn2, shinyLine: shinyIconLine3 }
     ];
 
     // Draw username
