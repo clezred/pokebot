@@ -9,6 +9,8 @@ const gen = require('../../../config/genpkid.json');
  * pokeloto : [SendMessages, SendMessagesInThreads, ReadMessageHistory, EmbedLinks, ViewChannel]
  */
 
+// TODO: Add Pokemon Type option
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('pokeloto')

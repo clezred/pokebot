@@ -1,17 +1,30 @@
-const { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType, CommandInteraction, ChannelType, ChatInputCommandInteraction, InteractionContextType } = require('discord.js');
-const { logError } = require('../../utils.js');
-const { sendLogMessage } = require('../../discord-utils.js');
-const { pokequiz } = require('../../pokequiz.js');
+const { SlashCommandBuilder, ChatInputCommandInteraction, InteractionContextType } = require('discord.js');
 const difficulties = require('../../../config/gamedifficulty.json');
+const { createPokeQuiz } = require('../../pokequiz.js');
+const { GameAccessibility } = require('../../enums.js');
+
+/*
+* NEEDED BOT PERMISSIONS
+* pokeparty : [SendMessages, SendMessagesInThreads, ManageMessages, EmbedLinks, ViewChannel, AddReactions]
+*/
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('pokequiz')
         .setDescription('Jouer au PokéQuiz !')
+        .addStringOption(option =>
+            option.setName('access')
+                .setDescription('Définir l\'accessibilité aux autres joueurs (publique par défaut)')
+                .addChoices(
+                    {name: 'Privée', value: GameAccessibility.PRIVATE},
+                    {name: 'Publique', value: GameAccessibility.PUBLIC}
+                )
+                .setRequired(false)
+        )
         .addIntegerOption(option =>
 			option.setName('generation')
 				.setDescription('Limiter l\'aléatoire à une génération en particulier')
-				.setMaxValue(8)
+				.setMaxValue(9)
 				.setMinValue(1)
 		)
         .addStringOption(option =>
@@ -26,31 +39,53 @@ module.exports = {
                 )
                 .setRequired(false)
         )
+        .addUserOption(option =>
+            option.setName('joueur2')
+                .setDescription('Mentionne le joueur que tu veux ajouter')
+                .setRequired(false)
+        )
+        .addUserOption(option =>
+            option.setName('joueur3')
+                .setDescription('Mentionne le joueur que tu veux ajouter')
+                .setRequired(false)
+        )
+        .addUserOption(option =>
+            option.setName('joueur4')
+                .setDescription('Mentionne le joueur que tu veux ajouter')
+                .setRequired(false)
+        )
+        .addUserOption(option =>
+            option.setName('joueur5')
+                .setDescription('Mentionne le joueur que tu veux ajouter')
+                .setRequired(false)
+        )
         .setContexts([
             InteractionContextType.Guild,
             InteractionContextType.PrivateChannel,
             InteractionContextType.BotDM
         ])
     ,
+
     /**
-     * Execute the command
+     * 
      * @param {ChatInputCommandInteraction} interaction 
      */
     async execute(interaction) {
-        const channel = interaction.channel;
-        const user = interaction.user;
+
+        const interactionReply = await interaction.reply({
+            content: "Création du lobby en cours...",
+            withResponse: true
+        });
+
+        const access = interaction.options.getInteger('access') ?? GameAccessibility.PUBLIC;
         const generation = interaction.options.getInteger('generation') ?? 0;
         const difficulty = interaction.options.getString('difficulty') ?? 'easy';
+        
+        const host = interaction.user;
 
-        await interaction.deferReply({ephemeral: true});
+        const isPrivate = (access === GameAccessibility.PRIVATE);
 
-        try {
-            pokequiz(channel, user, generation, difficulty);
-            interaction.editReply('La partie PokéQuiz commence !');
-        } catch (error) {
-            logError(error);
-            await interaction.editReply('Une erreur est survenue lors de la partie PokéQuiz !');
-            sendLogMessage(`Error : \`pokequiz\` : ${error.message}`);
-        }
+        createPokeQuiz(interactionReply, host, generation, isPrivate, difficulty);
     }
 }
+

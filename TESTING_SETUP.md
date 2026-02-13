@@ -2,7 +2,7 @@
 
 ## Configuration pour les tests
 
-Votre projet est maintenant configuré pour gérer différents environnements (production, développement, test).
+Ce projet est configuré pour gérer différents environnements (production, développement, test).
 
 ### 1. Fichiers de configuration
 
@@ -14,18 +14,7 @@ Votre projet est maintenant configuré pour gérer différents environnements (p
 - `.env.test` - Variables d'environnement de test (non versionné)
 - `config/ids.test.json` - IDs Discord pour les tests
 
-### 2. Configuration initiale
-
-#### Créer votre fichier .env.test :
-```bash
-cp .env.test.example .env.test
-```
-Puis éditez `.env.test` avec vos valeurs de test.
-
-#### Configurer vos IDs de test :
-Éditez `config/ids.test.json` avec les IDs de votre serveur Discord de test.
-
-### 3. Utilisation
+### 2. Utilisation
 
 #### Lancement en production :
 ```bash
@@ -46,7 +35,7 @@ npm run docker:test:up
 npm run start:dev
 ```
 
-### 4. Docker pour les tests
+### 3. Docker pour les tests
 
 Le fichier `docker-compose.test.yml` est configuré pour :
 - Utiliser une base de données PostgreSQL vierge (pas de dump)
@@ -63,16 +52,16 @@ Pour l'arrêter :
 npm run docker:test:down
 ```
 
-### 5. Comment ça fonctionne
+### 4. Comment ça fonctionne
 
 Le fichier `src/config.js` détecte automatiquement l'environnement via la variable `NODE_ENV` et charge :
 - Les bonnes variables d'environnement (via `.env` ou `.env.test`)
 - Le bon fichier d'IDs (`ids.json` ou `ids.test.json`)
 - Tous les autres fichiers de configuration nécessaires
 
-Aucune modification du code n'est nécessaire entre les environnements !
+Aucune modification du code n'est nécessaire entre les environnements.
 
-### 6. Fichiers à ne pas versionner
+### 5. Fichiers à ne pas versionner
 
 Ajoutez dans votre `.gitignore` :
 ```
@@ -80,5 +69,3 @@ Ajoutez dans votre `.gitignore` :
 .env.test
 data/
 ```
-
-Les fichiers `.env.example` et `.env.test.example` peuvent être versionnés comme templates.
