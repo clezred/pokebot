@@ -119,7 +119,7 @@ discordClient.on(Events.InteractionCreate, async interaction => {
 	} catch (error) {
 		logError(error);
         console.error(error);
-        const errorMessage = { content: 'Il y a eu une erreur lors de l\'exécution de la commande, veuillez réessayer.\n*Si le problème persiste, merci de le signaler sur le serveur de support (</support:1310560708236279908>).', ephemeral: true }
+        const errorMessage = { content: 'Il y a eu une erreur lors de l\'exécution de la commande, veuillez réessayer.\n*Si le problème persiste, merci de le signaler sur le serveur de support (</support:1310560708236279908>).*', ephemeral: true }
 		if (interaction.replied || interaction.deferred) {
 			await interaction.followUp(errorMessage);
 		} else {

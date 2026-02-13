@@ -21,8 +21,8 @@ module.exports = {
         EXPIRED:  3
     },
     GameAccessibility: {
-        PUBLIC:  0,
-        PRIVATE: 1
+        PUBLIC:  'public',
+        PRIVATE: 'private'
     },
     GameStatus: {
         INIT:     0,

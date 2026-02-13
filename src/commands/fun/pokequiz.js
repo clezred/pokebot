@@ -77,7 +77,7 @@ module.exports = {
             withResponse: true
         });
 
-        const access = interaction.options.getInteger('access') ?? GameAccessibility.PUBLIC;
+        const access = interaction.options.getString('access') ?? GameAccessibility.PUBLIC;
         const generation = interaction.options.getInteger('generation') ?? 0;
         const difficulty = interaction.options.getString('difficulty') ?? 'easy';
         
@@ -85,7 +85,9 @@ module.exports = {
 
         const isPrivate = (access === GameAccessibility.PRIVATE);
 
-        createPokeQuiz(interactionReply, host, generation, isPrivate, difficulty);
+        const message = interactionReply.resource?.message;
+
+        createPokeQuiz(message, host, generation, isPrivate, difficulty);
     }
 }
 

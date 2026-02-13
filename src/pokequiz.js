@@ -85,14 +85,15 @@ class Lobby {
         // Check if user is already a player
         if (this.hasPlayer(player.id)) return false;
         // Add player
-        this.players.set(player.id, player.username);
+        this.players.set(player.id, player);
+        this.refreshLobbyMessage();
         return true;
     }
 
     /**
      * Removes a player from the lobby
      * @param {string} playerId 
-     * @returns True if successfully 
+     * @returns True if successfully removed, false otherwise
      */
     removePlayer(playerId) {
         // Check if game has started or aborted
@@ -100,22 +101,18 @@ class Lobby {
         // Check if user is a player
         if (!this.hasPlayer(playerId)) return false;
         // Check if user is host
-        if (playerId == this.hostId) {
+        this.players.delete(playerId);
+        if (playerId === this.hostId) {
             // Check player count
-            if (this.getPlayerCount() > 1) {
-                // Remove host and replace host with first player
-                this.players.delete(playerId);
-                this.hostId = this.players.randomKey();
-                return true;
-            } else {
+            if (this.getPlayerCount() === 0) {
                 this.status = LobbyStatus.ABORTED;
+            } else {
+                this.hostId = this.players.randomKey();
+                console.log(this.players.get(this.hostId));
             }
-        } else {
-            // Remove player
-            this.players.delete(playerId);
-            this.refreshLobbyMessage();
-            return true;
         }
+        this.refreshLobbyMessage();
+        return true;
     }
 
     /**
@@ -124,6 +121,23 @@ class Lobby {
     refreshLobbyMessage() {
         // Check if the message is set
         if (!this.message) return;
+        // check if aborted
+        if (this.status === LobbyStatus.ABORTED) {
+            const abortEmbed = new EmbedBuilder()
+                .setTitle("Partie abandonnée...")
+                .setDescription("Ce message s'autodétruira dans 5 secondes.")
+                .setColor(0xFF0000)
+                .setTimestamp();
+            
+            this.message.edit({
+                content: "",
+                embeds: [abortEmbed],
+                components: []
+            });
+
+            setTimeout(() => this.message.delete().catch((e) => console.log(e)), 5000); // 5 seconds
+            return;
+        }
         // Players
         this.embed.setFields([{
             name: "Liste des joueurs",
@@ -131,10 +145,11 @@ class Lobby {
         }]);
         // Host (if changed)
         this.embed.setFooter({
-            text: `Hôte de la partie : ${this.players.get(this.hostId).username} | Accessibilité : ${acces === GameAccessibility.PRIVATE ? 'Privée' : 'Publique'}`
+            text: `Hôte de la partie : ${this.players.get(this.hostId).username} | Accessibilité : ${ this.isPrivate ? 'Privée' : 'Publique'}`
         });
         // Refresh
         this.message.edit({
+            content: "", // empty content
             embeds: [this.embed],
             components: [this.buttons]
         });
@@ -157,7 +172,7 @@ class Lobby {
         // Setup embed
         this.embed
             .setTitle(`PokéQuiz du ${difficulties[this.difficulty].name}`)
-            .setDescription(`Vous avez 5 minutes pour trouver le Pokémon correspondant à la description donnée. Que le meilleur gagne !\n_La partie commence <t:${Math.floor(Date.now() / 1000) + Math.ceil(difficulties[difficulty].time / 1000)}:R>_`)
+            .setDescription(`Vous avez 5 minutes pour trouver le Pokémon correspondant à la description donnée. Que le meilleur gagne !\n_La partie commence <t:${Math.floor(Date.now() / 1000) + 300}:R>_`)
             .setColor(0xFFFF00)
         
         // Create buttons
@@ -202,15 +217,13 @@ class Lobby {
             if (!success) return followUpCallback(LobbyResponseCodes.UnexpectedBehaviour);
             // Add to the players of this channel
             addPlayer(user.id, this.message.channel.id);
-            // Refresh
-            this.refreshLobbyMessage();
-
+            
             return followUpCallback(LobbyResponseCodes.SuccessfulyJoined);
         }
 
         // Private access
         // Already asked to join
-        if (this.joinRequests.findKey(user.id))
+        if (this.joinRequests.has(user.id))
             return LobbyResponseCodes.AlreadyAskedToJoin;
         // New joinRequest
         this.joinRequests.set(user.id, new JoinRequest(this, user, followUpCallback));
@@ -218,16 +231,18 @@ class Lobby {
 
     /**
      * Makes a player leave the lobby
-     * @param {User} user 
+     * @param {string} user 
+     * @returns {boolean} True if player was removed, false otherwise
      */
-    async leave(user) {
+    leave(userId) {
         // Not a player
-        if (!this.players.has(user.id)) return;
-
+        if (!this.hasPlayer(userId)) return false;
         // Remove player from lobby
-        this.players.delete(user.id);
+        const removed = this.removePlayer(userId);
         // Remove player from this channel's list
-        removePlayer(user.id, this.message.channel.id);
+        if (removed)
+            removePlayer(userId, this.message.channel.id);
+        return removed;
     }
 
     /**
@@ -238,12 +253,12 @@ class Lobby {
     async start(startGameCallback) {
         if (!this.message) return;
         // Ensures no modification once game started
-        this.status = LobbyStatus.STARTED;
+        if(this.status === LobbyStatus.STARTED) return;
         
         // Filter
-        const lobbyMessageFilter = async i => {
+        const lobbyMessageFilter = async button => {
             await button.deferUpdate(); // prevent button timeout
-            return i.message.id === lobbyMessage.id;
+            return button.message.id === this.message.id;
         }
 
         // Create the button interaction collector
@@ -265,7 +280,14 @@ class Lobby {
                     break;
                 }
                 case 'leave': {
-                    await this.leave();
+                    if (!this.hasPlayer(button.user.id)) return;
+                    const removed = this.leave(button.user.id);
+                    if (!removed) {
+                        await button.followUp({
+                            content: LobbyResponses[LobbyResponseCodes.UnexpectedBehaviour],
+                            flags: MessageFlags.Ephemeral
+                        });
+                    }
                     break;
                 }
                 case 'start': {
@@ -287,16 +309,16 @@ class Lobby {
         // Time ended / Start button pressed by host
         // Executed once
         collector.on('end', async () => {
-            // abort
-            if (!this.getPlayerCount() > 0) {
-                this.message.delete();
-                this.message = undefined;
-                this.status = LobbyStatus.ABORTED;
-                return;
-            }
+            // check if aborted
+            if (this.status === LobbyStatus.ABORTED) return;
+            // 
             this.status = LobbyStatus.STARTED;
             // start game
             startGameCallback();
+            // starting game message
+            // TODO
+            // delete lobby message after 5 seconds
+            setTimeout(() => this.message.delete(), 5_000) // 5 seconds
         });
     }
 }
@@ -304,7 +326,7 @@ class Lobby {
 /**
  * Represents a join request
  */
-class JoinRequest {
+class JoinRequest { // TODO: feedback host decision, improve style
 
     /**
      * Constructor
@@ -362,7 +384,7 @@ class JoinRequest {
             .addComponents(this.getButtons());
         // Create message request
         const requestMessage = await host.dmChannel.send({
-            content: `${b.user.username} souhaite rejoindre la partie lancée sur le channel ${this.lobby.message.channel.name} du serveur ${this.lobby.message.guild.name}`, 
+            content: `${this.user.username} souhaite rejoindre la partie lancée sur le channel ${this.lobby.message.channel.name} du serveur ${this.lobby.message.guild.name}`, 
             components: [buttons]
         });
         // Confirm request was sent to user (button.followUp())
@@ -390,23 +412,20 @@ class JoinRequest {
                     // edit request message
                     await requestMessage.edit({
                         content: `${this.user.username} a rejoint une autre partie entre temps.`,
-                        components: [] // empty buttons
-                    })
+                    });
                     // remove joinRequest (if not already removed)
                     this.lobby.removeJoinRequest(this.user.id);
                     break; // nothing more to do here
                 }
                 // make the user join the game
-                this.lobby.addPlayer(this.user)
-                // add user to players of the channel
+                const success = this.lobby.addPlayer(this.user);
+
                 addPlayer(this.user.id, this.lobby.message.channel.id);
+
                 // display confirmation
                 await requestMessage.edit({
-                    content: 'Vous avez accepté la demande de ' + this.user.username,
-                    components: [buttons]
-                })
-                // refresh lobby message
-                this.lobby.refreshLobbyMessage();
+                    content: 'Vous avez accepté la demande de ' + this.user.username
+                });
                 // remove joinRequest
                 this.lobby.removeJoinRequest(this.user.id);
                 break;
@@ -415,8 +434,7 @@ class JoinRequest {
                 // update joinRequest status
                 this.status = JoinRequestStatus.REFUSED;
                 await requestMessage.edit({
-                    content: 'Vous avez refusé la demande de ' + this.user.username,
-                    components: [buttons]
+                    content: 'Vous avez refusé la demande de ' + this.user.username
                 });
                 // remove joinRequest
                 this.lobby.removeJoinRequest(this.user.id);
@@ -443,10 +461,15 @@ class JoinRequest {
 
         // When manually stopped or time expires
         requestMessageCollector.on('end', async () => {
+            // remove buttons
+            requestMessage.edit({
+                components: []
+            });
+            // check status
+            if (this.status !== JoinRequestStatus.WAITING) return;
             // Edit request message
             requestMessage.edit({
-                content: 'La demande a expiré',
-                components: [] // empty buttons
+                content: 'La demande a expiré'
             })
             // Remove joinRequest from collection
             this.lobby.removeJoinRequest(this.user.id);
@@ -543,7 +566,7 @@ class Game {
 
         // add hints corresponding to the difficulty
         if (difficulties[this.difficulty].hints > 0) {
-            for (let i = 0; i < difficulties[difficulty].hints; i++) {
+            for (let i = 0; i < difficulties[this.difficulty].hints; i++) {
                 this.buttons.addComponents(hintButtons[i]);
             }
         }
@@ -567,7 +590,7 @@ class Game {
         this.embedFields = [
             {
                 name: "Liste des joueurs",
-                value: players.map(p => `<@${p.id}>`).join(' | '),
+                value: this.players.map((username, id) => `<@${id}>`).join(' | '),
                 inline: false
             },
             {
@@ -585,12 +608,12 @@ class Game {
         // ensure it isn't triggered during game
         if (this.status !== GameStatus.INIT) return;
         this.embed = new EmbedBuilder()
-            .setTitle(`PokéParty du ${difficulties[difficulty].name}`)
+            .setTitle(`PokéParty du ${difficulties[this.difficulty].name}`)
             .setColor(0xFFFF00)
             .setDescription("*Retrouvez le nom du Pokémon correspondant à la description ci-dessous et utilisez les boutons pour obtenir plus d'indices !\nQue le meilleur gagne !*")
             .addFields(this.embedFields)
             .setFooter({
-                text: "Hôte de la partie : " + host.username
+                text: "Hôte de la partie : " + this.players.get(this.hostId)
             })
             .setTimestamp();
     }
@@ -613,7 +636,8 @@ class Game {
      */
     takeGuess(playerId, answer) {
         // increment player tries
-        this.tries.set(playerId, this.tries.get(playerId)++);
+        const playerTries = this.tries.get(playerId)
+        this.tries.set(playerId, playerTries + 1);
         // normalize answer
         const normAnswer = latinize(answer.toLowerCase());
         // verify answer
@@ -684,7 +708,7 @@ class Game {
 
         // unlock new hint every minute
         const unlockHintsInterval = setInterval(() => {
-            if (this.availableHintsCount < difficulties[difficulty].hints) {
+            if (this.availableHintsCount < difficulties[this.difficulty].hints) {
                 const unlocking = this.buttons.components.at(this.unlockedHintsCount)
                 unlocking.setDisabled(false);
                 unlocking.setStyle(ButtonStyle.Success);
@@ -713,14 +737,14 @@ class Game {
             // disable the button
             if (pressedButton) {
                 pressedButton.setDisabled(true);
-                pressedButton.setStyle(ButtonStyle.Secondary);
+                pressedButton.setStyle(ButtonStyle.Primary);
             }
 
             // increment hints
             this.availableHintsCount++;
             // take action depending on the hint button pressed
             switch (button.customId) {
-            case ('type'):
+            case ('type'): // TODO: fix types display
                 this.embedFields.push({
                     name: "Type" + (this.pokemon.types.size > 1 ? "s" : ""),
                     value: this.pokemon.types.reduce(
@@ -783,7 +807,7 @@ class Game {
         answersCollector.on('collect', async answer => {
         
             if (difficulties[this.difficulty].tries > 0) {
-                if (this.tries.get(m.author.id) >= difficulties[difficulty].tries) {
+                if (this.tries.get(m.author.id) >= difficulties[this.difficulty].tries) {
                     await answer.react('🚫').catch();
                 }
             } else if (this.takeGuess(answer.author.id, answer.content)) {
@@ -794,7 +818,7 @@ class Game {
                 await answer.react('❌').catch();
             }
     
-            if ((difficulties[difficulty].tries > 0) && (this.getTotalTries() >= difficulties[difficulty].tries * this.players.size)) {
+            if ((difficulties[this.difficulty].tries > 0) && (this.getTotalTries() >= difficulties[this.difficulty].tries * this.players.size)) {
                 answersCollector.stop();
             }
             
@@ -802,6 +826,12 @@ class Game {
             setTimeout(() => {
                 if (answer.deletable) answer.delete().catch();
             }, 5000); // 5 seconds
+        })
+
+        answersCollector.on('end', async () => {
+            if (this.status === GameStatus.FOUND) return;
+            this.status = GameStatus.NOTFOUND;
+            this.defeat();
         })
     }
 
@@ -813,7 +843,7 @@ class Game {
             .setDescription(`Bravo ${this.players.get(winnerId)} !\nVous avez trouvé **${this.pokemon.name}** en ${chrono / 1000}s !`)
             .setColor(0x00FF00)
             .setFooter({
-                text: `Difficulté ${difficulties[difficulty].name} | ${this.tries.get(winnerId)} essais | ${this.availableHintsCount} indices`
+                text: `Difficulté ${difficulties[this.difficulty].name} | ${this.tries.get(winnerId)} essais | ${this.availableHintsCount} indices`
             });
         this.endGame(victoryEmbed);
     }
@@ -825,7 +855,7 @@ class Game {
             .setDescription(`Personne n'a trouvé **${this.pokemon.name}** ...`)
             .setColor(0xFF0000)
             .setFooter({
-                text: `Difficulté ${difficulties[difficulty].name} | ${this.getTotalTries()} essais | ${this.availableHintsCount} indices`
+                text: `Difficulté ${difficulties[this.difficulty].name} | ${this.getTotalTries()} essais | ${this.availableHintsCount} indices`
             });
         this.endGame(defeatEmbed);
     }
@@ -867,25 +897,32 @@ class Game {
             removePlayer(id, this.channel.id);
         });
 
+        const postGameFilter = async button => {
+            await button.deferUpdate();
+            return true;
+        }
+
         const postgameCollector = this.message.createMessageComponentCollector({
             dispose: true,
+            filter: postGameFilter,
             componentType: ComponentType.Button,
             time: 60_000 // 1 min
         });
 
         postgameCollector.on('collect', async button => {
-            await button.deferUpdate();
             switch (button.customId) {
             case ('pokedex'):
-                const pkmEmbed = await pokedexEmbed(pkmId);
+                const pkmEmbed = await pokedexEmbed(this.pokemon.id);
                 await button.followUp({
                     embeds: [pkmEmbed], 
                     flags: MessageFlags.Ephemeral
                 });
                 break;
             case ('replay'):
-                this.restart();
-                postgameCollector.stop();
+                if (this.hostId === button.user.id) {
+                    this.restart();
+                    postgameCollector.stop();
+                }
             }
         });
         
@@ -927,7 +964,7 @@ class Pokemon {
 
         // Get french descriptions
         this.description = ""; // init to empty string
-        const descriptions = pokemonSpecies.flavor_text_entries.filter(
+        let descriptions = pokemonSpecies.flavor_text_entries.filter(
             flavor => flavor.language.name === 'fr'
         )
         // if no french description available take an english one
@@ -990,7 +1027,6 @@ class PokeQuiz {
         this.generation = generation;
         this.difficulty = difficulty;
         this.lobby = new Lobby(host, message, isPrivate, difficulty);
-        this.party = new Game(); // empty object to init type
         this.init();
     }
 
@@ -1080,12 +1116,12 @@ async function createPokeQuiz(message, host, generation, isPrivate, difficulty) 
     if (isPlaying(host.id, message.channel.id)) {
         await message.edit({
             content: 'Vous êtes déjà dans une partie en cours sur ce salon !',
-            flags: MessageFlags.Ephemeral
+            flags: MessageFlags.Ephemeral // TODO fix ephemeral problem
         });
         return;
     }
     // if not, add it the the global players
-    addPlayer(interaction.user.id, interaction.channel.id);
+    addPlayer(message.author.id, message.channel.id);
     // start the PokeQuiz
     return new PokeQuiz(message, host, generation, isPrivate, difficulty)
 }
