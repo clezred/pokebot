@@ -1,11 +1,14 @@
-/***********************
- * This file implements game and lobby logic for PokeQuiz (formerly known as PokeParty)
- * Notice:
- * Watch out for user actions processing in parallel
- * if bugs occur in strange situations, consider implementing a queue
- * 
- * // TODO : logs, JSDOC, test
- ***********************/
+/**************************************************************************
+ * PokeQuiz (formerly known as PokeParty)
+ 
+ This file implements game and lobby logic for PokeQuiz 
+ 
+ Notice:
+ Watch out for user actions processing in parallel. If bugs occur in strange
+ situations, consider implementing a queue.
+
+ // TODO : logs, JSDOC, test, gather constants
+ *************************************************************************/
 
 
 const { Collection, User, MessageCollector, Message, TextBasedChannel, EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle, ComponentType, MessageFlags, InteractionCollector, ButtonInteraction } = require("discord.js");
@@ -26,27 +29,32 @@ const LobbyResponses = {
     "1": "Votre demande à bien été envoyée à l'hôte.",
     "2": "Vous êtes déjà dans la partie.",
     "3": "Vous êtes déjà dans une partie en cours sur le même salon.",
-    "4": "Vous avez déjà demandé à rejoindre la partie, merci de patienter.",
-    "5": "Impossible de contacter l'hôte de la partie pour demander à rejoindre, ses DMs sont désactivés."
+    "4": "Vous avez déjà demandé à rejoindre la partie. Merci de patienter.",
+    "5": "Impossible de contacter l'hôte de la partie pour demander à rejoindre, ses DMs sont désactivés.",
+    "6": "Action impossible, vous n'êtes pas un joueur de cette partie.",
+    "7": "Pour une raison inconnue, nous n'avons pas pu vous faire quitter la partie. Merci de réessayer.",
+    "8": "Pour une raison inconnue, nous n'avons pas pu vous faire rejoindre la partie. Merci de réessayer.",
+    "9": "Votre requête a été acceptée par l'hôte, vous avez rejoint la partie !",
+    "10": "Votre requête a été refusée par l'hôte.",
 }
 
 /**
- * Class representing the lobby for a pokequiz
+ * Class representing the lobby for a PokeQuiz
  */
 class Lobby {
 
     /**
-     * Constructor for a pokequiz lobby
-     * @param {User} host 
-     * @param {Message} message
-     * @param {boolean} isPrivate
-     * @param {string} difficulty
+     * Constructor for a PokeQuiz lobby
+     * @param {User} host The user hosting the game
+     * @param {Message} message The message where to start the lobby
+     * @param {boolean} isPrivate Accessibility of the game
+     * @param {string} difficulty Difficulty of the game
      */
     constructor(host, message, isPrivate, difficulty) {
         this.hostId = host.id;
+        this.message = message;
         this.isPrivate = isPrivate;
         this.difficulty = difficulty;
-        this.message = message;
         this.embed = new EmbedBuilder();
         this.buttons = new ActionRowBuilder();
         this.joinRequests = new Collection();
@@ -62,17 +70,13 @@ class Lobby {
      * @param {string} playerId The id of the player
      * @returns {boolean} True if player exists, false otherwise
      */
-    hasPlayer(playerId) {
-        return this.players.has(playerId);
-    }
+    hasPlayer(playerId) { return this.players.has(playerId) }
 
     /**
      * Get the player count
      * @returns {number} Player count
      */
-    getPlayerCount() {
-        return this.players.size;
-    }
+    getPlayerCount() { return this.players.size }
 
     /**
      * Adds a player to the lobby
@@ -80,12 +84,13 @@ class Lobby {
      * @returns {boolean} True if the player is added, false otherwise
      */
     addPlayer(player) {
-        // Check if game has started or aborted
+        // Check if game has started or is aborted
         if (this.status !== LobbyStatus.WAITING) return false;
         // Check if user is already a player
         if (this.hasPlayer(player.id)) return false;
         // Add player
         this.players.set(player.id, player);
+        // refresh
         this.refreshLobbyMessage();
         return true;
     }
@@ -93,7 +98,7 @@ class Lobby {
     /**
      * Removes a player from the lobby
      * @param {string} playerId 
-     * @returns True if successfully removed, false otherwise
+     * @returns {boolean} True if successfully removed, false otherwise
      */
     removePlayer(playerId) {
         // Check if game has started or aborted
@@ -105,18 +110,20 @@ class Lobby {
         if (playerId === this.hostId) {
             // Check player count
             if (this.getPlayerCount() === 0) {
+                // no more players
                 this.status = LobbyStatus.ABORTED;
             } else {
+                // randomly pass the ownership
                 this.hostId = this.players.randomKey();
-                console.log(this.players.get(this.hostId));
             }
         }
+        // refresh
         this.refreshLobbyMessage();
         return true;
     }
 
     /**
-     * Refreshes the Lobby message
+     * Refreshes the Lobby message with fresh data
      */
     refreshLobbyMessage() {
         // Check if the message is set
@@ -143,9 +150,9 @@ class Lobby {
             name: "Liste des joueurs",
             value: this.players.map((player, id) => `<@${id}>`).join(' | ')
         }]);
-        // Host (if changed)
+        // Host
         this.embed.setFooter({
-            text: `Hôte de la partie : ${this.players.get(this.hostId).username} | Accessibilité : ${ this.isPrivate ? 'Privée' : 'Publique'}`
+            text: `Hôte de la partie : ${this.players.get(this.hostId).username} | Accessibilité : ${this.isPrivate ? 'Privée' : 'Publique'}`
         });
         // Refresh
         this.message.edit({
@@ -158,7 +165,7 @@ class Lobby {
     /**
      * Removes a join request from the collection
      * Used when the request has ended or had a response
-     * @param {string} userId 
+     * @param {string} userId The user's discord id
      */
     removeJoinRequest(userId) {
         if (this.joinRequests.has(userId))
@@ -166,14 +173,14 @@ class Lobby {
     }
 
     /**
-     * Initializes the complex variables
+     * Initializes the class attributes
      */
     init() {
         // Setup embed
         this.embed
             .setTitle(`PokéQuiz du ${difficulties[this.difficulty].name}`)
             .setDescription(`Vous avez 5 minutes pour trouver le Pokémon correspondant à la description donnée. Que le meilleur gagne !\n_La partie commence <t:${Math.floor(Date.now() / 1000) + 300}:R>_`)
-            .setColor(0xFFFF00)
+            .setColor(0x00FFFF) // yellow
         
         // Create buttons
         const joinButton = new ButtonBuilder()
@@ -191,9 +198,11 @@ class Lobby {
             .setLabel('Commencer')
             .setStyle(ButtonStyle.Primary);
         
+        // adapt if lobby is private
         if (this.isPrivate) joinButton.setLabel('Demander à rejoindre');
-        
+        // add the buttons
         this.buttons.addComponents(joinButton, leaveButton, startButton);
+        // refresh
         this.refreshLobbyMessage();
     }
 
@@ -202,7 +211,7 @@ class Lobby {
      * @param {User} user The user who wants to join
      * @param {function} followUpCallback Sends response to user
      */
-    async join(user, followUpCallback) {
+    join(user, followUpCallback) {
         // Already joined
         if (this.hasPlayer(user.id)) 
             return followUpCallback(LobbyResponseCodes.AlreadyJoined);
@@ -210,39 +219,42 @@ class Lobby {
         if (isPlaying(user.id, this.message.channel.id)) 
             return followUpCallback(LobbyResponseCodes.AlreadyPlaying);
 
-        if (!this.isPrivate) { // Public access
+        // Public access
+        if (!this.isPrivate) { 
             // Add to the players in the lobby
             const success = this.addPlayer(user);
             // Double verification
             if (!success) return followUpCallback(LobbyResponseCodes.UnexpectedBehaviour);
             // Add to the players of this channel
             addPlayer(user.id, this.message.channel.id);
-            
+            // feedback to user
             return followUpCallback(LobbyResponseCodes.SuccessfulyJoined);
         }
 
         // Private access
         // Already asked to join
         if (this.joinRequests.has(user.id))
-            return LobbyResponseCodes.AlreadyAskedToJoin;
+            return followUpCallback(LobbyResponseCodes.AlreadyAskedToJoin);
         // New joinRequest
         this.joinRequests.set(user.id, new JoinRequest(this, user, followUpCallback));
     }
 
     /**
      * Makes a player leave the lobby
-     * @param {string} user 
+     * @param {string} playerId The user that is leaving
      * @returns {boolean} True if player was removed, false otherwise
      */
-    leave(userId) {
+    leave(playerId, followUpCallback) {
         // Not a player
-        if (!this.hasPlayer(userId)) return false;
+        if (!this.hasPlayer(playerId)) 
+            return followUpCallback(LobbyResponseCodes.NotAPlayer);
         // Remove player from lobby
-        const removed = this.removePlayer(userId);
+        const removed = this.removePlayer(playerId);
         // Remove player from this channel's list
         if (removed)
-            removePlayer(userId, this.message.channel.id);
-        return removed;
+            removePlayer(playerId, this.message.channel.id);
+        else 
+            return followUpCallback(LobbyResponseCodes.UnableToLeave);
     }
 
     /**
@@ -252,7 +264,7 @@ class Lobby {
      */
     async start(startGameCallback) {
         if (!this.message) return;
-        // Ensures no modification once game started
+        // Ensures no call to the method once game started
         if(this.status === LobbyStatus.STARTED) return;
         
         // Filter
@@ -270,53 +282,45 @@ class Lobby {
 
         // Button pressed
         collector.on('collect', async button => {
+            // function used as callback to send feedback to user
+            const followUp = (code) => button.followUp({
+                content: LobbyResponses[code],
+                flags: MessageFlags.Ephemeral
+            })
+            // differentiate buttons
             switch (button.customId) {
-                case 'join': {
-                    const followUp = (content) => button.followUp({
-                        content: content,
-                        flags: MessageFlags.Ephemeral
-                    });
-                    await this.join(button.user, (code) => followUp(LobbyResponses[code]));
+                case 'join':
+                    this.join(button.user, followUp);
                     break;
-                }
-                case 'leave': {
-                    if (!this.hasPlayer(button.user.id)) return;
-                    const removed = this.leave(button.user.id);
-                    if (!removed) {
-                        await button.followUp({
-                            content: LobbyResponses[LobbyResponseCodes.UnexpectedBehaviour],
-                            flags: MessageFlags.Ephemeral
-                        });
-                    }
+                case 'leave':
+                    this.leave(button.user.id, followUp);
                     break;
-                }
-                case 'start': {
-                    if (button.user.id === this.hostId) {
-                        collector.stop();
-                    }
+                case 'start':
+                    if (button.user.id === this.hostId) collector.stop();
                     break;
-                }
-                default: {
-                    await button.followUp({
-                        content: LobbyResponses[LobbyResponseCodes.UnexpectedBehaviour],
-                        flags: MessageFlags.Ephemeral
-                    });
-                    break; // maybe useless
-                }
+                default:
+                    followUp(LobbyResponseCodes.UnexpectedBehaviour);
             }
         });
 
         // Time ended / Start button pressed by host
         // Executed once
-        collector.on('end', async () => {
+        collector.on('end', () => {
             // check if aborted
             if (this.status === LobbyStatus.ABORTED) return;
-            // 
+            // update status
             this.status = LobbyStatus.STARTED;
             // start game
             startGameCallback();
             // starting game message
-            // TODO
+            this.message.edit({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle("Démarrage de la partie...")
+                        .setColor(0x00FF00) // green
+                ],
+                components: []
+            });
             // delete lobby message after 5 seconds
             setTimeout(() => this.message.delete(), 5_000) // 5 seconds
         });
@@ -326,7 +330,7 @@ class Lobby {
 /**
  * Represents a join request
  */
-class JoinRequest { // TODO: feedback host decision, improve style
+class JoinRequest { // TODO: improve style (thumbnail?)
 
     /**
      * Constructor
@@ -334,10 +338,11 @@ class JoinRequest { // TODO: feedback host decision, improve style
      * @param {User} user  The user who wants to join
      * @param {function} callback The callback function
      */
-    constructor(lobby, user, callback) {
+    constructor(lobby, user, followUpCallback) {
         this.lobby = lobby;
         this.user = user;
-        this.callback = callback;
+        // -> lobby button collector -> button.followUp() ephemeral
+        this.callback = followUpCallback; 
         this.status = JoinRequestStatus.WAITING;
         this.send();
     }
@@ -346,16 +351,15 @@ class JoinRequest { // TODO: feedback host decision, improve style
      * Gets the host from the lobby
      * @returns {User} The lobby's host
      */
-    getHost() {
-        return this.lobby.players.get(this.lobby.hostId);
-    }
+    getHost() { return this.lobby.players.get(this.lobby.hostId) }
 
     /**
      * Gets the buttons for a join request message
-     * @returns {ButtonBuilder[]} The buttons
+     * @returns {ButtonBuilder[]} The buttons row
      */
     getButtons() {
-        return [
+        return new ActionRowBuilder()
+            .addComponents([
             new ButtonBuilder()
                 .setCustomId('yes')
                 .setLabel('Accepter')
@@ -365,7 +369,63 @@ class JoinRequest { // TODO: feedback host decision, improve style
                 .setCustomId('no')
                 .setLabel('Refuser')
                 .setStyle(ButtonStyle.Danger)
-        ];
+        ]);
+    }
+
+    accept() {
+        // update joinRequest status
+        this.status = JoinRequestStatus.ACCEPTED;
+        // joined another party
+        if (isPlaying(this.user.id, this.lobby.message.channel.id)) {
+            // edit request message
+            this.requestMessage.edit({
+                embeds: [
+                    new EmbedBuilder()
+                        .setDescription(`**${this.user.username}** a rejoint une autre partie entre temps.`)
+                        .setColor(0xFF00FF)
+                ],
+                components: []
+            });
+            // remove joinRequest
+            this.lobby.removeJoinRequest(this.user.id);
+            return; // nothing more to do here
+        }
+        // make the user join the game
+        const success = this.lobby.addPlayer(this.user);
+        // feedback to the player who asked
+        if (success) this.callback(LobbyResponseCodes.RequestAccepted);
+        else this.callback(LobbyResponseCodes.UnableToJoin)
+        // add the player to the global list of players
+        addPlayer(this.user.id, this.lobby.message.channel.id);
+        // display confirmation
+        this.requestMessage.edit({
+            embeds: [
+                new EmbedBuilder()
+                    .setDescription(`Vous avez accepté la demande de **${this.user.username}**.`)
+                    .setColor(0x00FF00) // green
+            ],
+            components: []
+        });
+        // remove joinRequest
+        this.lobby.removeJoinRequest(this.user.id);
+    }
+
+    refuse() {
+        // update joinRequest status
+        this.status = JoinRequestStatus.REFUSED;
+        // feedback to user who asked
+        this.callback(LobbyResponseCodes.RequestRefused);
+        // feedback to host
+        this.requestMessage.edit({
+            embeds: [
+                new EmbedBuilder()
+                    .setDescription(`Vous avez refusé la demande de **${this.user.username}**.`)
+                    .setColor(0xFF0000) // red
+            ],
+            components: []
+        });
+        // remove joinRequest
+        this.lobby.removeJoinRequest(this.user.id);
     }
 
     /**
@@ -374,17 +434,21 @@ class JoinRequest { // TODO: feedback host decision, improve style
     async send() {
         // prevent code execution in wrong situation
         if (this.status != JoinRequestStatus.WAITING) return;
+        // get the host
         const host = this.getHost();
         // DM may throw an error
         try {
         // Create DM channel between bot and host
         await host.createDM(true);
         // Create buttons
-        const buttons = new ActionRowBuilder()
-            .addComponents(this.getButtons());
+        const buttons = this.getButtons();
         // Create message request
-        const requestMessage = await host.dmChannel.send({
-            content: `${this.user.username} souhaite rejoindre la partie lancée sur le channel ${this.lobby.message.channel.name} du serveur ${this.lobby.message.guild.name}`, 
+        this.requestMessage = await host.dmChannel.send({
+            embeds: [
+                new EmbedBuilder()
+                    .setDescription(`**${this.user.username}** souhaite rejoindre votre partie !`)
+                    .setColor(0xFF00FF) // violet
+            ],
             components: [buttons]
         });
         // Confirm request was sent to user (button.followUp())
@@ -395,91 +459,57 @@ class JoinRequest { // TODO: feedback host decision, improve style
             return i.user.id === host.id;
         };
 
-        const requestMessageCollector = requestMessage.createMessageComponentCollector({
+        const requestMessageCollector = this.requestMessage.createMessageComponentCollector({
             filter: requestMessageCollectorFilter,
             componentType: ComponentType.Button,
             time: 30_000, // 30 seconds
-            max: 1       // collects 1 button at most
+            max: 1        // collects 1 button at most
         })
 
         requestMessageCollector.on('collect', async button => {
             switch (button.component.customId) {
-            case ('yes'): {
-                // update joinRequest status
-                this.status = JoinRequestStatus.ACCEPTED;
-                // joined another party
-                if (isPlaying(this.user.id, this.lobby.message.channel.id)) {
-                    // edit request message
-                    await requestMessage.edit({
-                        content: `${this.user.username} a rejoint une autre partie entre temps.`,
-                    });
-                    // remove joinRequest (if not already removed)
-                    this.lobby.removeJoinRequest(this.user.id);
-                    break; // nothing more to do here
-                }
-                // make the user join the game
-                const success = this.lobby.addPlayer(this.user);
-
-                addPlayer(this.user.id, this.lobby.message.channel.id);
-
-                // display confirmation
-                await requestMessage.edit({
-                    content: 'Vous avez accepté la demande de ' + this.user.username
-                });
-                // remove joinRequest
-                this.lobby.removeJoinRequest(this.user.id);
+            case ('yes'):
+                this.accept();
                 break;
-            }
-            case ('no'): {
-                // update joinRequest status
-                this.status = JoinRequestStatus.REFUSED;
-                await requestMessage.edit({
-                    content: 'Vous avez refusé la demande de ' + this.user.username
-                });
-                // remove joinRequest
-                this.lobby.removeJoinRequest(this.user.id);
+            case ('no'):
+                this.refuse();
                 break;
-            }
-            default: { // impossible behaviour
+            default:// impossible behaviour
                 // update joinRequest status
                 this.status = JoinRequestStatus.ERROR;
                 // feedback to user
-                requestMessage.edit({
-                    content: "Une erreur inattendue s'est produite avec la demande de " + this.user.username + ". Réponse à la demande invalide."
-                })
-                break; // useful ????
-            }} // end switch
-
-            // disable buttons and emphasize the choosen one
-            buttons.components.forEach(comp => {
-                comp.setDisabled(true);
-                if (comp.data.custom_id === (button.component.customId === 'no' ? 'yes' : 'no')) {
-                    comp.setStyle(ButtonStyle.Secondary)
-                }
-            });
+                this.requestMessage.edit({
+                    embeds: [
+                        new EmbedBuilder()
+                            .setDescription(`**Erreur inattendue, réponse à la demande invalide.**`)
+                            .setColor(0x000000) // black
+                    ],
+                    components: []
+                });
+            } // end switch
         })
 
         // When manually stopped or time expires
         requestMessageCollector.on('end', async () => {
-            // remove buttons
-            requestMessage.edit({
-                components: []
-            });
             // check status
             if (this.status !== JoinRequestStatus.WAITING) return;
             // Edit request message
             requestMessage.edit({
-                content: 'La demande a expiré'
+                embeds: [
+                    new EmbedBuilder()
+                        .setDescription(`La demande a expiré.`)
+                        .setColor(0x000000) // black
+                ],
+                components: []
             })
             // Remove joinRequest from collection
             this.lobby.removeJoinRequest(this.user.id);
-        })
+        });
         
         } catch (e) {
-            console.error(e);
             this.status = JoinRequestStatus.ERROR;
             this.lobby.removeJoinRequest(this.user.id);
-            await this.callback(LobbyResponseCodes.UnableToAsk);
+            this.callback(LobbyResponseCodes.UnableToAsk);
         }
     }
 }
@@ -583,6 +613,7 @@ class Game {
 
     /**
      * Creates the base message embed fields
+     * It has a specific method 
      */
     createEmbedFields() {
         // ensure it isn't triggered during game
@@ -616,6 +647,7 @@ class Game {
                 text: "Hôte de la partie : " + this.players.get(this.hostId)
             })
             .setTimestamp();
+        
     }
 
     /**
@@ -744,12 +776,11 @@ class Game {
             this.availableHintsCount++;
             // take action depending on the hint button pressed
             switch (button.customId) {
-            case ('type'): // TODO: fix types display
+            case ('type'):
                 this.embedFields.push({
                     name: "Type" + (this.pokemon.types.size > 1 ? "s" : ""),
                     value: this.pokemon.types.reduce(
-                        (first, second) => first + " | " + second,
-                        ""
+                        (first, second) => first + " | " + second
                     ),
                     inline: true
                 });
@@ -1115,15 +1146,22 @@ async function createPokeQuiz(message, host, generation, isPrivate, difficulty) 
     // Check if host is already playing
     if (isPlaying(host.id, message.channel.id)) {
         await message.edit({
-            content: 'Vous êtes déjà dans une partie en cours sur ce salon !',
-            flags: MessageFlags.Ephemeral // TODO fix ephemeral problem
+            content: 'Vous êtes déjà dans une partie en cours sur ce salon !'
         });
         return;
     }
     // if not, add it the the global players
     addPlayer(message.author.id, message.channel.id);
+    // create lobby message
+    const lobbyMessage = await message.channel.send({
+        embed: [
+            new EmbedBuilder()
+                .setTitle("Démarrage du lobby...")
+                .setColor(0x00FFFF) // yellow
+        ]
+    });
     // start the PokeQuiz
-    return new PokeQuiz(message, host, generation, isPrivate, difficulty)
+    return new PokeQuiz(lobbyMessage, host, generation, isPrivate, difficulty);
 }
 
 module.exports = {

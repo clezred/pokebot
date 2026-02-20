@@ -1,3 +1,11 @@
+/**************************************************************************
+ * Help command
+ 
+ This file implements the logic behind the /help command and its subcommands.
+
+ // TODO : Improve redaction, give better help, make it better
+ *************************************************************************/
+
 const { SlashCommandBuilder, PermissionFlagsBits, ChatInputCommandInteraction, ChannelType, ApplicationCommandOptionType, InteractionContextType } = require('discord.js');
 const { guildId, logsChannelId } = require('../../../config/ids.json');
 const { getGuild } = require('../../discord-client');

@@ -1,4 +1,14 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction, InteractionContextType } = require('discord.js');
+/**************************************************************************
+ * pokequiz command
+ 
+ This file implements the /pokequiz command.
+ It starts a game of pokequiz, logic is defined in the dedicated file 
+ (src/pokequiz.js).
+
+ // TODO : Make better hints ?
+ *************************************************************************/
+
+const { SlashCommandBuilder, ChatInputCommandInteraction, InteractionContextType, MessageFlags } = require('discord.js');
 const difficulties = require('../../../config/gamedifficulty.json');
 const { createPokeQuiz } = require('../../pokequiz.js');
 const { GameAccessibility } = require('../../enums.js');
@@ -74,6 +84,7 @@ module.exports = {
 
         const interactionReply = await interaction.reply({
             content: "Création du lobby en cours...",
+            flags: MessageFlags.Ephemeral,
             withResponse: true
         });
 

@@ -1,3 +1,14 @@
+/**************************************************************************
+ * pokedex command
+ 
+ This file implements the logic behind the /pokedex command.
+ It sends back an discord embed describing the pokemon the user entered.
+
+ // TODO : change command name to "pokemon" (pokedex will be used for the 
+ future catching and collecting system). Improve search options and display
+ lists of pokemons (by type, category...). Visual improvements
+ *************************************************************************/
+
 const { SlashCommandBuilder, ChatInputCommandInteraction, ChannelType, InteractionContextType } = require('discord.js');
 const { pokedexEmbed } = require('../../pokedex-utils.js');
 const gen = require('../../../config/genpkid.json');

@@ -9,7 +9,7 @@
 
 /**
  * Get current time in HH:MM format
- * @returns {String} current time in HH:MM format
+ * @returns {String} current time in DD/MM/YY | HH:MM format
  */
 function getCurrentTime() {
     const now = new Date();

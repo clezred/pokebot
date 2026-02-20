@@ -1,3 +1,13 @@
+/**************************************************************************
+ * pokeloto command
+ 
+ This file implements the logic behind the /pokeloto command.
+ Sends a random pokemon
+
+ // TODO : Maybe merge it with /pokemon so that when it is argument-less it 
+ sends a random pokemon (or with a "random" subcommand). Add Pokemon Type option
+ *************************************************************************/
+
 const { SlashCommandBuilder, ChannelType, ChatInputCommandInteraction, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { pokedexEmbed } = require('../../pokedex-utils.js');
 const { random } = require('../../utils.js');
@@ -8,8 +18,6 @@ const gen = require('../../../config/genpkid.json');
  * NEEDED BOT PERMISSIONS
  * pokeloto : [SendMessages, SendMessagesInThreads, ReadMessageHistory, EmbedLinks, ViewChannel]
  */
-
-// TODO: Add Pokemon Type option
 
 module.exports = {
 	data: new SlashCommandBuilder()

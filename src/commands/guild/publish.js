@@ -1,3 +1,17 @@
+/**************************************************************************
+ * publish command
+ 
+ This file implements the logic behind the /publish command.
+ It allows mass diffusion of changelogs of the bot to every server that 
+ wants to be updated on.
+
+ IMPORTANT NOTE:
+ This command, as all the others in the "guild" folder, are only available to
+ use on a dedicated Discord server (PokeBot Support).
+
+ // TODO : Maybe useless, think about it.
+ *************************************************************************/
+
 const { SlashCommandBuilder, PermissionFlagsBits, ChatInputCommandInteraction, ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType, InteractionContextType } = require('discord.js');
 const axios = require('axios');
 const { sendNews } = require('../../publish');

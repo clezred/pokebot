@@ -1,3 +1,19 @@
+/**************************************************************************
+ * me command
+ 
+ This file implements the logic behind the /me command.
+ It defines a random Pokemon Species for the user, server wide.
+
+ IMPORTANT NOTE:
+ This command, as all the others in the "guild" folder, are only available to
+ use on a dedicated Discord server (PokeBot Support).
+
+ // TODO : Make it possible on every server that enables it, don't change the
+ user's nickname, possibility to have a cross-server pokemon (by default) 
+ and server-only pokemon if server administrator enabled it. Change its
+ boring name.
+ *************************************************************************/
+
 const { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType, ChatInputCommandInteraction, InteractionContextType } = require('discord.js');
 const { random, logInfo, logWarn } = require('../../utils.js');
 const { pokedexEmbed } = require('../../pokedex-utils.js');

@@ -1,3 +1,13 @@
+/**************************************************************************
+ * team command
+ 
+ This file implements the logic behind the /team command.
+ It sends a team of 6 random Pokemons as a pixel art picture copying the style
+ of gen 5.
+
+ // TODO: better options.
+ *************************************************************************/
+
 const { SlashCommandBuilder, ChannelType, ChatInputCommandInteraction, InteractionContextType } = require('discord.js');
 const { team } = require('../../team.js');
 const { random } = require('../../utils.js');

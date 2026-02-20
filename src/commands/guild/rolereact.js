@@ -1,3 +1,16 @@
+/**************************************************************************
+ * rolereact command
+ 
+ This file implements the logic behind the /rolereact command.
+ It allows for administrators to create role reactions on messages.
+
+ IMPORTANT NOTE:
+ This command, as all the others in the "guild" folder, are only available to
+ use on a dedicated Discord server (PokeBot Support).
+
+ // TODO : Maybe useless, think about it.
+ *************************************************************************/
+
 const { SlashCommandBuilder, PermissionFlagsBits, ChatInputCommandInteraction, InteractionContextType } = require('discord.js');
 const { logError, logInfo } = require('../../utils.js');
 const { addRoleReactionRecord } = require('../../postgres-utils.js');

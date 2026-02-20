@@ -1,3 +1,13 @@
+/**************************************************************************
+ * support command
+ 
+ This file implements the logic behind the /support command.
+ It basicaly returns an invite to the PokeBot Support Discord Server
+
+ // TODO : Improve style, informations
+ *************************************************************************/
+
+
 const { SlashCommandBuilder, ChatInputCommandInteraction, InteractionContextType } = require('discord.js');
 
 module.exports = {

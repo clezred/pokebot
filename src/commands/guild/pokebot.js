@@ -1,3 +1,20 @@
+/**************************************************************************
+ * pokebot command
+ 
+ This file implements the logic behind the /me command and its subcommands.
+ Allows the bot administrator to perform actions on the bot's behaviour and
+ shutdown it if needed.
+
+ IMPORTANT NOTE:
+ This command, as all the others in the "guild" folder, are only available to
+ use on a dedicated Discord server (PokeBot Support).
+
+ // TODO : Make it possible on every server that enables it, don't change the
+ user's nickname, possibility to have a cross-server pokemon (by default) 
+ and server-only pokemon if server administrator enabled it. Change its
+ boring name.
+ *************************************************************************/
+
 const { SlashCommandBuilder, PermissionFlagsBits, CommandInteraction, ActivityType, InteractionContextType } = require('discord.js');
 const { stopClient } = require('../../discord-client');
 const { setCustomPresence, unsetCustomPresence } = require('../../client-presence-utils');
