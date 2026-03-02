@@ -92,6 +92,9 @@ async function generateTeamImage(pokemons, pkmNames, pkmTypes, username) {
         // Draw pokemon sprite
         try {
             const image = await loadImage(pkm.sprites.front_default);
+            ctx.shadowColor = 'black';
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
             ctx.drawImage(image, spriteColumn - (image.width / 2), spriteLine - (image.height / 2), image.width, image.height);
         } catch (error) {
             console.error('Failed to load sprite:', error);
