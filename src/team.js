@@ -128,7 +128,7 @@ async function generateTeamImage(pokemons, pkmNames, pkmTypes, username) {
         const types = pkmTypes.get(pkm.name).reverse();
         for (let j = 0; j < types.length; j++) {
             try {
-                const typeIconPath = path.join(__dirname, `../assets/images/types_icons/types_fr/${types[j]}.png`);
+                const typeIconPath = path.join(__dirname, `../assets/images/types_icons/fr/${types[j]}.png`);
                 const typeIcon = await loadImage(typeIconPath);
                 ctx.drawImage(typeIcon, infosColumn - ((j+1) * 38) - 32, typesLine, 32, 14);
             } catch (error) {

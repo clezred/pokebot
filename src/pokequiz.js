@@ -8,6 +8,7 @@
  situations, consider implementing a queue.
 
  // TODO : logs, JSDOC, test, gather constants
+ // consider gathering answers with a Context Menu instead of a MessageCollector to avoid flood and allow more natural answers
  *************************************************************************/
 
 
