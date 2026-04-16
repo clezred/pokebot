@@ -74,8 +74,11 @@ module.exports = {
 			const baseGuild = await getGuild(guildId);
 			const guildCommands = await baseGuild.commands.fetch();
 			guildCommands.forEach(cmd => {
-				if (cmd.applicationId === interaction.client.application.id && interaction.member.permissions.has(cmd.defaultPermission)) {
-					commands.push(`</${cmd.name}:${cmd.id}>`);
+				if (cmd.applicationId === interaction.client.application.id) {
+					const requiredPerms = cmd.defaultMemberPermissions;
+					if (!requiredPerms || interaction.member.permissions.has(requiredPerms)) {
+						commands.push(`</${cmd.name}:${cmd.id}>`);
+					}
 				}
 			});
 		}
